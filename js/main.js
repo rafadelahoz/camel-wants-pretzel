@@ -269,20 +269,23 @@ const cgame = {
         this.renderWater();*/
         this.won = true;
 
-        $(".content").delay(150).animate({
-            "font-size": "15em"
-          }, 120, function () {
-            $(".content").animate({
-              "font-size": "1em"
-            }, 120, function() {
-                alert("Camel got pretzel!");
-                cgame.init();
-            });
-          });
-
         setTimeout(function() {
-            
-        }, 1000);
+            if (cgame.gameover)
+                setTimeout(function() {
+                    alert("Camel got pretzel... but got thirsty!");
+                }, 5);
+            else
+                $(".content").delay(150).animate({
+                    "font-size": "15em"
+                  }, 120, function () {
+                    $(".content").animate({
+                      "font-size": "1em"
+                    }, 120, function() {
+                        alert("Camel got pretzel!");
+                        cgame.init();
+                    });
+                  });
+        }, 5);
     },
 
     handleGameover: function handleGameover() {
