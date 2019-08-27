@@ -4,7 +4,8 @@ const charsetA = {
     "wall": "🔲",
     "tree": "🌳",
     "fire": "🔥",
-    "seed": "🌰"
+    "seed": "🌰",
+    "pretzel": "🥨"
 }
 
 const charsetB = {
@@ -12,7 +13,8 @@ const charsetB = {
     "wall": "[X]",
     "tree": "T",
     "fire": "F",
-    "seed": "S"
+    "seed": "S",
+    "pretzel": "P"
 }
 
 let charset = charsetA;
@@ -31,23 +33,33 @@ const cgame = {
         char: charset.camel
     },
 
-    entities: [
-        {
-            "type": "fire",
-            x: 6, y: 6
-        }
-    ],
-
+    entities: [],
     entitiesBuffer: [],
 
     init: function init() {
+        this.gameover = false;
+        this.won = false;
+
+        this.water = 3;
+        this.camel.x = 4;
+        this.camel.y = 4;
+
+        this.entities = [{
+                type: "fire",
+                x: 6, y: 6
+            },
+            {
+                type: "pretzel",
+                x: 3, y: 3
+            }];
 
         this.setupInput();
 
         let content = $(".content");
+        content.html('');
         content.append("The screen of 🐫 goes below");
         content.append("<div id='watermeter'></div>");
-        content.append("<div id='screen'></div>");
+        content.append("<div id='screen'><table id='gridTable'></table></div>");
 
         cgame.grid = [];
         for (let row = 0; row < this.rows; row++) {
@@ -79,12 +91,11 @@ const cgame = {
 
     render: function render() {
         // Render screen
-        let screen = $("#screen");
-        screen.html('');
+        let table = $("#gridTable");
 
         let computedGrid = this.computeGrid();
 
-        let innerText = "<table>";
+        let innerText = "";
         for (let row = 0; row < this.rows; row++) {
             innerText += "<tr>"
             for (let col = 0; col < this.cols; col++) {
@@ -92,9 +103,8 @@ const cgame = {
             }
             innerText += "</tr>";
         }
-        innerText += "</table>";
 
-        screen.append(innerText);
+        table.html(innerText);
     },
 
     computeGrid: function computeGrid() {
@@ -121,8 +131,10 @@ const cgame = {
 
     update: function update() {
         if (!this.gameover) {
-            this.updateEntities();
-            this.updateWater();
+            if (!this.won) {
+                this.updateEntities();
+                this.updateWater();
+            }
 
             this.render();
         }
@@ -208,8 +220,6 @@ const cgame = {
         this.moveCamelTo(nx, ny);
 
         this.update();
-
-        
     },
 
     moveCamelTo: function moveCamelTo(nx, ny) {
@@ -226,6 +236,11 @@ const cgame = {
                     switch (entity.type) {
                         case "fire": 
                             cgame.removeWater(1);
+                            break;
+                        case "pretzel": 
+                            cgame.removeWater(1);
+                            if (!cgame.gameover)
+                                cgame.handleWin();
                     }
                 }
             }
@@ -245,6 +260,27 @@ const cgame = {
             cgame.water -= amount;
         if (cgame.water <= 0)
             cgame.handleGameover();
+    },
+
+    handleWin: function handleWin() {
+        /*this.render();
+        this.renderWater();*/
+        this.won = true;
+
+        $(".content").delay(150).animate({
+            "font-size": "15em"
+          }, 120, function () {
+            $(".content").animate({
+              "font-size": "1em"
+            }, 120, function() {
+                alert("Camel got pretzel!");
+                cgame.init();
+            });
+          });
+
+        setTimeout(function() {
+            
+        }, 1000);
     },
 
     handleGameover: function handleGameover() {
