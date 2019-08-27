@@ -15,7 +15,7 @@ const charsetB = {
     "seed": "S"
 }
 
-let charset = charsetB;
+let charset = charsetA;
 
 const cgame = {
     grid: [],
@@ -253,6 +253,11 @@ const cgame = {
     },
 
     setupInput: function setupInput() {
+        $("#btnLeft").on("click", function() {cgame.moveCamel("left")});
+        $("#btnRight").on("click", function() {cgame.moveCamel("right")});
+        $("#btnUp").on("click", function() {cgame.moveCamel("up")});
+        $("#btnDown").on("click", function() {cgame.moveCamel("down")});
+
         Mousetrap.bind("left", function() {cgame.moveCamel("left")});
         Mousetrap.bind("right", function() {cgame.moveCamel("right")});
         Mousetrap.bind("up", function() {cgame.moveCamel("up")});
