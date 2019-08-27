@@ -1,6 +1,7 @@
 
 const charsetA = {
     "camel": "🐫",
+    "wall": "🔲",
     "tree": "🌳",
     "fire": "🔥",
     "seed": "🌰"
@@ -8,17 +9,21 @@ const charsetA = {
 
 const charsetB = {
     "camel": "C",
+    "wall": "[X]",
     "tree": "T",
     "fire": "F",
     "seed": "S"
 }
 
-let charset = charsetA;
+let charset = charsetB;
 
 const cgame = {
     grid: [],
     cols: 9,
     rows: 12,
+
+    MAX_WATER: 5,
+    water: 3,
 
     camel: {
         x: 4,
@@ -41,6 +46,7 @@ const cgame = {
 
         let content = $(".content");
         content.append("The screen of 🐫 goes below");
+        content.append("<div id='watermeter'></div>");
         content.append("<div id='screen'></div>");
 
         cgame.grid = [];
@@ -48,19 +54,31 @@ const cgame = {
             cgame.grid.push([]);
             for (let col = 0; col < this.cols; col++) {
                 if (col == 0 || col == this.cols-1 || row == 0 || row == this.rows-1)
-                    cgame.grid[row].push(charset.tree);
+                    cgame.grid[row].push(charset.wall);
                 else
-                    if (Math.random() > 0.2)
+                    if (Math.random() > 0.2 || (col == 6 && row == 6)) // Hack to avoid tree under first fire
                         this.grid[row].push("");
                     else
                         this.grid[row].push(charset.tree)
             }
         }
 
+        this.renderWater();
         this.render();
     },
 
+    renderWater: function renderWater() {
+        // Render water
+        let water = "";
+        while (water.length < cgame.water*2)
+            water += "💧";
+        while (water.length < cgame.MAX_WATER*2)
+            water += "🔹"
+        $("#watermeter").text("🚰" + water);
+    },
+
     render: function render() {
+        // Render screen
         let screen = $("#screen");
         screen.html('');
 
@@ -101,6 +119,21 @@ const cgame = {
         return cgrid;
     },
 
+    update: function update() {
+        if (!this.gameover) {
+            this.updateEntities();
+            this.updateWater();
+
+            this.render();
+        }
+
+        this.renderWater();
+    },
+
+    updateWater: function() {
+
+    },
+
     updateEntities: function updateEntities() {
         // Update entities
         for (entity of this.entities) {
@@ -112,7 +145,7 @@ const cgame = {
             this.entities.push(entity);
         }
 
-        entitiesBuffer = [];
+        this.entitiesBuffer = [];
     },
 
     updateEntity: function updateEntity(entity) {
@@ -121,7 +154,7 @@ const cgame = {
                 // Spread to trees
                 for (pos of this.buildNeighbours(entity)) {
                     if (this.getGrid(pos.x, pos.y) == charset["tree"]) {
-                        this.setGrid(pos.x, pos.y, "x");
+                        this.setGrid(pos.x, pos.y, "");
                         this.entitiesBuffer.push({type: "fire", x: pos.x, y: pos.y});
                     }
                 }
@@ -172,15 +205,51 @@ const cgame = {
                     ny = cgame.rows-1;
         }
 
-        // TODO: Checks for new position
+        this.moveCamelTo(nx, ny);
+
+        this.update();
+
+        
+    },
+
+    moveCamelTo: function moveCamelTo(nx, ny) {
+        // Check if camel can move to new position
         if (cgame.grid[ny][nx] == '') {
             cgame.camel.x = nx;
             cgame.camel.y = ny;
+
+            console.log("Checking entities");
+            for (entity of this.entities) {
+                if (entity.x == nx && entity.y == ny) {
+                    console.log("Entity " + JSON.stringify(entity));
+                    // Camel vs entity.type
+                    switch (entity.type) {
+                        case "fire": 
+                            cgame.removeWater(1);
+                    }
+                }
+            }
         }
+    },
 
-        this.updateEntities();
+    addWater: function addWater(amount) {
+        if (amount != undefined && amount != null)
+            cgame.water += amount;
+        if (cgame.water > cgame.MAX_WATER) {
+            cgame.water = cgame.MAX_WATER;
+        }
+    },
 
-        cgame.render();
+    removeWater: function removeWater(amount) {
+        if (amount != undefined && amount != null)
+            cgame.water -= amount;
+        if (cgame.water <= 0)
+            cgame.handleGameover();
+    },
+
+    handleGameover: function handleGameover() {
+        cgame.gameover = true;
+        $('table').css('background', "gray");
     },
 
     setupInput: function setupInput() {
