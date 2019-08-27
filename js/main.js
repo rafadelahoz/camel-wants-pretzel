@@ -57,9 +57,11 @@ const cgame = {
 
         let content = $(".content");
         content.html('');
-        content.append("The screen of 🐫 goes below");
-        content.append("<div id='watermeter'></div>");
-        content.append("<div id='screen'><table id='gridTable'></table></div>");
+        content.append("<div style='text-align: center;'><h2>🐫♥🥨</h2></div>");
+        content.append("<div id='screen'></div>");
+        $("#screen")
+            .append("<div id='watermeter'></div>")
+            .append("<table id='gridTable'></table>");
 
         cgame.grid = [];
         for (let row = 0; row < this.rows; row++) {
@@ -284,8 +286,10 @@ const cgame = {
     },
 
     handleGameover: function handleGameover() {
-        cgame.gameover = true;
-        $('table').css('background', "gray");
+        setTimeout(function() {
+            cgame.gameover = true;
+            $('table').css('background', "gray");
+        }, 5);
     },
 
     setupInput: function setupInput() {
