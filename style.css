@@ -1,0 +1,16 @@
+#screen {
+    margin-left: auto;
+    margin-right: auto;
+    width: fit-content;
+}
+
+#buttons {
+	border-top: 2px dashed gray; 
+	padding: 5px; 
+	margin-top: 5px;
+	
+	/* Center buttons */
+	width: fit-content;
+	margin-left: auto;
+	margin-right: auto;
+}
