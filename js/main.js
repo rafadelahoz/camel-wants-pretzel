@@ -44,20 +44,22 @@ const cgame = {
         this.camel.x = 4;
         this.camel.y = 4;
 
-        this.entities = [{
+        this.entities = []
+        ;
+
+        /*{
                 type: "fire",
                 x: 6, y: 6
             },
             {
                 type: "pretzel",
                 x: 3, y: 3
-            }];
-
-        this.setupInput();
+            }
+        ];*/
 
         let content = $(".content");
         content.html('');
-        content.append("<div style='text-align: center;'><h2>🐫♥🥨</h2></div>");
+        content.append("<div style='text-align: center;'><h2>🐫❤️🥨</h2></div>");
         content.append("<div id='screen'></div>");
         $("#screen")
             .append("<div id='watermeter'></div>")
@@ -70,24 +72,56 @@ const cgame = {
                 if (col == 0 || col == this.cols-1 || row == 0 || row == this.rows-1)
                     cgame.grid[row].push(charset.wall);
                 else
-                    if (Math.random() > 0.2 || (col == 6 && row == 6)) // Hack to avoid tree under first fire
+                    if (Math.random() > 0.2)
                         this.grid[row].push("");
                     else
                         this.grid[row].push(charset.tree)
             }
         }
 
+        this.placeAtRandomFreePosition("fire");
+        this.placeAtRandomFreePosition("pretzel");
+
         this.renderWater();
         this.render();
+    },
+
+    placeAtRandomFreePosition: function placeAtRandomFreePosition(what) {
+        let placed = false;
+        let col, row = null;
+        while (!placed) {
+            col = Math.round(Math.random()*cgame.cols);
+            row = Math.round(Math.random()*cgame.rows);
+            if (this.getGrid(col, row) == "" && !this.findEntityAt(col, row)) {
+                placed = true;
+                this.entities.push({type: what, x: col, y: row});
+            }
+        }  
+    },
+
+    findEntityAt: function findEntityAt(x, y) {
+        for (ent of this.entities) {
+            if (ent.x == x && ent.y == y)
+                return ent;
+        }
+
+        return null;
     },
 
     renderWater: function renderWater() {
         // Render water
         let water = "";
-        while (water.length < cgame.water*2)
+        let ctr = 0;
+        while (ctr < cgame.water) {
             water += "💧";
-        while (water.length < cgame.MAX_WATER*2)
-            water += "🔹"
+            ctr++;
+        }
+
+        while (ctr < cgame.MAX_WATER) {
+            water += "✖️"
+            ctr++;
+        }
+        
         $("#watermeter").text("🚰" + water);
     },
 
@@ -193,6 +227,10 @@ const cgame = {
     },
 
     moveCamel: function moveCamel(dir) {
+        // Don't move on gameover
+        // TODO: Buffer the command and move on turn start or something
+        if (cgame.gameover)
+            return;
 
         let nx = cgame.camel.x;
         let ny = cgame.camel.y;
@@ -292,6 +330,8 @@ const cgame = {
         setTimeout(function() {
             cgame.gameover = true;
             $('table').css('background', "gray");
+
+            wait(function() {alert("Camel got thirsty!");});
         }, 5);
     },
 
@@ -307,3 +347,12 @@ const cgame = {
         Mousetrap.bind("down", function() {cgame.moveCamel("down")});
     }
 };
+
+function wait(callback, time) {
+    setTimeout(callback, (!time ? 50 : time));
+}
+
+function bootstrap() {
+    cgame.setupInput();
+    cgame.init();
+}

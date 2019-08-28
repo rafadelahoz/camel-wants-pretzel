@@ -1,11 +1,16 @@
 #screen {
+	margin-top: 2em;
+	margin-bottom: 2em;
     margin-left: auto;
     margin-right: auto;
     width: fit-content;
 }
 
-#buttons {
+#bottom {
 	border-top: 2px dashed gray; 
+}
+
+#buttons {
 	padding: 5px; 
 	margin-top: 5px;
 	
@@ -13,4 +18,15 @@
 	width: fit-content;
 	margin-left: auto;
 	margin-right: auto;
+}
+
+#buttons > button {
+	border: none;
+	background: none;
+
+	font-size: 1.5em;
+}
+
+#buttons > button:active {
+	font-size: 1.7em;
 }
