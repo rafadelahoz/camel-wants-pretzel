@@ -1,6 +1,6 @@
 #screen {
 	margin-top: 2em;
-	margin-bottom: 2em;
+	margin-bottom: 0em;
     margin-left: auto;
     margin-right: auto;
     width: fit-content;
@@ -29,4 +29,14 @@
 
 #buttons > button:active {
 	font-size: 1.7em;
+}
+
+#messages {
+	text-align: center;
+	font-family: monospace;
+	margin-bottom: 1em;
+}
+
+#msg-old {
+	color: gray;
 }

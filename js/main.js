@@ -1,11 +1,11 @@
-
 const charsetA = {
     "camel": "🐫",
     "wall": "🔲",
     "tree": "🌳",
     "fire": "🔥",
     "seed": "🌰",
-    "pretzel": "🥨"
+    "pretzel": "🥨",
+    "fountain": "⛲️"
 }
 
 const charsetB = {
@@ -14,7 +14,8 @@ const charsetB = {
     "tree": "T",
     "fire": "F",
     "seed": "S",
-    "pretzel": "P"
+    "pretzel": "P",
+    "fountain": "F"
 }
 
 let charset = charsetA;
@@ -44,8 +45,7 @@ const cgame = {
         this.camel.x = 4;
         this.camel.y = 4;
 
-        this.entities = []
-        ;
+        this.entities = [];
 
         /*{
                 type: "fire",
@@ -59,28 +59,35 @@ const cgame = {
 
         let content = $(".content");
         content.html('');
-        content.append("<div style='text-align: center;'><h2>🐫❤️🥨</h2></div>");
+        content.append("<div id='title' style='text-align: center;'><h2>🐫❤️🥨</h2></div>");
         content.append("<div id='screen'></div>");
         $("#screen")
             .append("<div id='watermeter'></div>")
-            .append("<table id='gridTable'></table>");
+            .append("<table id='gridTable'></table>")
+        content.append("<div id='messages'>" + 
+                        "<span id='msg-old'></span><br/>" + 
+                        "<span id='msg-new'></span>" + 
+                    "</div>");
+
+        message("Camel wants pretzel...");
+        message("but he can't if he is thirsty!");
 
         cgame.grid = [];
         for (let row = 0; row < this.rows; row++) {
             cgame.grid.push([]);
             for (let col = 0; col < this.cols; col++) {
-                if (col == 0 || col == this.cols-1 || row == 0 || row == this.rows-1)
+                if (col == 0 || col == this.cols - 1 || row == 0 || row == this.rows - 1)
                     cgame.grid[row].push(charset.wall);
+                else if (Math.random() > 0.2)
+                    this.grid[row].push("");
                 else
-                    if (Math.random() > 0.2)
-                        this.grid[row].push("");
-                    else
-                        this.grid[row].push(charset.tree)
+                    this.grid[row].push(charset.tree)
             }
         }
 
         this.placeAtRandomFreePosition("fire");
         this.placeAtRandomFreePosition("pretzel");
+        this.placeAtRandomFreePosition("fountain");
 
         this.renderWater();
         this.render();
@@ -90,13 +97,17 @@ const cgame = {
         let placed = false;
         let col, row = null;
         while (!placed) {
-            col = Math.round(Math.random()*cgame.cols);
-            row = Math.round(Math.random()*cgame.rows);
+            col = Math.round(Math.random() * cgame.cols);
+            row = Math.round(Math.random() * cgame.rows);
             if (this.getGrid(col, row) == "" && !this.findEntityAt(col, row)) {
                 placed = true;
-                this.entities.push({type: what, x: col, y: row});
+                this.entities.push({
+                    type: what,
+                    x: col,
+                    y: row
+                });
             }
-        }  
+        }
     },
 
     findEntityAt: function findEntityAt(x, y) {
@@ -121,7 +132,7 @@ const cgame = {
             water += "✖️"
             ctr++;
         }
-        
+
         $("#watermeter").text("🚰" + water);
     },
 
@@ -172,15 +183,14 @@ const cgame = {
                 this.updateWater();
             }
 
-            this.render();
+            
         }
 
+        this.render();
         this.renderWater();
     },
 
-    updateWater: function() {
-
-    },
+    updateWater: function() {},
 
     updateEntities: function updateEntities() {
         // Update entities
@@ -198,15 +208,19 @@ const cgame = {
 
     updateEntity: function updateEntity(entity) {
         switch (entity.type) {
-            case "fire":
-                // Spread to trees
-                for (pos of this.buildNeighbours(entity)) {
-                    if (this.getGrid(pos.x, pos.y) == charset["tree"]) {
-                        this.setGrid(pos.x, pos.y, "");
-                        this.entitiesBuffer.push({type: "fire", x: pos.x, y: pos.y});
-                    }
+        case "fire":
+            // Spread to trees
+            for (pos of this.buildNeighbours(entity)) {
+                if (this.getGrid(pos.x, pos.y) == charset["tree"]) {
+                    this.setGrid(pos.x, pos.y, "");
+                    this.entitiesBuffer.push({
+                        type: "fire",
+                        x: pos.x,
+                        y: pos.y
+                    });
                 }
-                break;
+            }
+            break;
         }
     },
 
@@ -222,8 +236,19 @@ const cgame = {
     },
 
     buildNeighbours: function buildNeighbours(pos) {
-        return [{x: pos.x-1, y: pos.y}, {x: pos.x+1, y: pos.y},
-                {x: pos.x, y: pos.y-1}, {x: pos.x, y: pos.y+1}];
+        return [{
+            x: pos.x - 1,
+            y: pos.y
+        }, {
+            x: pos.x + 1,
+            y: pos.y
+        }, {
+            x: pos.x,
+            y: pos.y - 1
+        }, {
+            x: pos.x,
+            y: pos.y + 1
+        }];
     },
 
     moveCamel: function moveCamel(dir) {
@@ -236,25 +261,25 @@ const cgame = {
         let ny = cgame.camel.y;
 
         switch (dir) {
-            case "left":
-                nx -= 1;
-                if (nx < 0)
-                    nx = 0;
+        case "left":
+            nx -= 1;
+            if (nx < 0)
+                nx = 0;
             break;
-            case "right":
-                nx += 1;
-                if (nx >= cgame.cols)
-                    nx = cgame.cols-1;
+        case "right":
+            nx += 1;
+            if (nx >= cgame.cols)
+                nx = cgame.cols - 1;
             break;
-            case "up":
-                ny -= 1;
-                if (ny < 0)
-                    ny = 0;
+        case "up":
+            ny -= 1;
+            if (ny < 0)
+                ny = 0;
             break;
-            case "down":
-                ny += 1;
-                if (ny >= cgame.rows)
-                    ny = cgame.rows-1;
+        case "down":
+            ny += 1;
+            if (ny >= cgame.rows)
+                ny = cgame.rows - 1;
         }
 
         this.moveCamelTo(nx, ny);
@@ -274,13 +299,16 @@ const cgame = {
                     console.log("Entity " + JSON.stringify(entity));
                     // Camel vs entity.type
                     switch (entity.type) {
-                        case "fire": 
-                            cgame.removeWater(1);
-                            break;
-                        case "pretzel": 
-                            cgame.removeWater(1);
-                            if (!cgame.gameover)
-                                cgame.handleWin();
+                    case "fire":
+                        cgame.removeWater(1);
+                        break;
+                    case "fountain":
+                        cgame.addWater(1);
+                        break;
+                    case "pretzel":
+                        cgame.removeWater(1, true);
+                        if (!cgame.gameover)
+                            cgame.handleWin();
                     }
                 }
             }
@@ -288,18 +316,34 @@ const cgame = {
     },
 
     addWater: function addWater(amount) {
-        if (amount != undefined && amount != null)
-            cgame.water += amount;
+        if (amount == undefined || amount == null)
+            return;
+
+        message("Fresh!");
+
+        cgame.water += amount;
         if (cgame.water > cgame.MAX_WATER) {
             cgame.water = cgame.MAX_WATER;
         }
+
+        flashy('#watermeter', 'aqua');
     },
 
-    removeWater: function removeWater(amount) {
-        if (amount != undefined && amount != null)
-            cgame.water -= amount;
+    removeWater: function removeWater(amount, dontShowMsg) {
+        if (amount == undefined || amount == null)
+            return;
+
+        if (!dontShowMsg)
+            message("Ouch!");
+
+        cgame.water -= amount;
+        flashy('#watermeter', 'red', function() {
+            if (cgame.water <= 0)
+                cgame.handleGameover();            
+        });
+
         if (cgame.water <= 0)
-            cgame.handleGameover();
+            cgame.gameover = true;
     },
 
     handleWin: function handleWin() {
@@ -310,19 +354,21 @@ const cgame = {
         setTimeout(function() {
             if (cgame.gameover)
                 setTimeout(function() {
+                    message("Camel got pretzel... but got thirsty!");
                     alert("Camel got pretzel... but got thirsty!");
                 }, 5);
             else
-                $(".content").delay(150).animate({
-                    "font-size": "15em"
-                  }, 120, function () {
-                    $(".content").animate({
-                      "font-size": "1em"
-                    }, 120, function() {
+                $("#title").delay(100).animate({
+                    "font-size": "5em"
+                }, 100, function() {
+                    $("#title").delay(100).animate({
+                        "font-size": "1em"
+                    }, 100, function() {
+                        message("Camel got pretzel!");
                         alert("Camel got pretzel!");
                         cgame.init();
                     });
-                  });
+                });
         }, 5);
     },
 
@@ -331,25 +377,62 @@ const cgame = {
             cgame.gameover = true;
             $('table').css('background', "gray");
 
-            wait(function() {alert("Camel got thirsty!");});
+            wait(function() {
+                message("Camel got thirsty!");
+                alert("Camel got thirsty!");
+            });
         }, 5);
     },
 
     setupInput: function setupInput() {
-        $("#btnLeft").on("click", function() {cgame.moveCamel("left")});
-        $("#btnRight").on("click", function() {cgame.moveCamel("right")});
-        $("#btnUp").on("click", function() {cgame.moveCamel("up")});
-        $("#btnDown").on("click", function() {cgame.moveCamel("down")});
+        $("#btnLeft").on("click", function() {
+            cgame.moveCamel("left")
+        });
+        $("#btnRight").on("click", function() {
+            cgame.moveCamel("right")
+        });
+        $("#btnUp").on("click", function() {
+            cgame.moveCamel("up")
+        });
+        $("#btnDown").on("click", function() {
+            cgame.moveCamel("down")
+        });
 
-        Mousetrap.bind("left", function() {cgame.moveCamel("left")});
-        Mousetrap.bind("right", function() {cgame.moveCamel("right")});
-        Mousetrap.bind("up", function() {cgame.moveCamel("up")});
-        Mousetrap.bind("down", function() {cgame.moveCamel("down")});
+        Mousetrap.bind("left", function() {
+            cgame.moveCamel("left")
+        });
+        Mousetrap.bind("right", function() {
+            cgame.moveCamel("right")
+        });
+        Mousetrap.bind("up", function() {
+            cgame.moveCamel("up")
+        });
+        Mousetrap.bind("down", function() {
+            cgame.moveCamel("down")
+        });
     }
 };
 
+function flashy(component, color, callback) {
+    if (!color) color = 'yellow';
+    let bgcolor = '#fff'; // $(component).css('background-color');
+    $(component).delay(10).animate({
+        "background-color": color
+    }, 150, function() {
+        $(component).animate({
+            "background-color": bgcolor,
+        }, 150, (callback));
+    });
+}
+
 function wait(callback, time) {
     setTimeout(callback, (!time ? 50 : time));
+}
+
+function message(msg) {
+    let msgnew = $('#msg-new');
+    $('#msg-old').text(msgnew.text());
+    msgnew.text(msg);
 }
 
 function bootstrap() {
