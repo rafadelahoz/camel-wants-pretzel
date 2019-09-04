@@ -125,6 +125,12 @@ const cgame = {
         this.entities.push(entity);
     },
 
+    removeEntity(entity) {
+        let index = this.entities.indexOf(entity);
+        if (index > -1)
+            this.entities.splice(index, 1);
+    },
+
     isCellEmpty: function isCellEmpty(x, y) {
         return this.getGrid(x, y) == "" && !this.findEntityAt(x, y);
     },
@@ -277,7 +283,9 @@ const cgame = {
 
         let playerInput = input.any();
 
-        if (input.left)
+        if (input.button)
+            this.camelAction();
+        else if (input.left)
             this.moveCamel("left");
         else if (input.right)
             this.moveCamel("right");
@@ -322,6 +330,30 @@ const cgame = {
         }
 
         this.moveCamelTo(nx, ny);
+    },
+
+    camelAction: function camelAction() {
+        let acted = false;
+        let ent = cgame.findEntityAt(cgame.camel.x, cgame.camel.y);
+        if (ent != null) {
+            switch (ent.type) {
+                case "fire":
+                    // Put out fire if there's enough water
+                    if (cgame.water > 1) {
+                        message("Camel puts out the fire");
+                        cgame.removeWater(1);
+                        cgame.removeEntity(ent);
+                        flashy(cgame.cellDesc(cgame.camel.x, cgame.camel.y), 'aqua');
+                    } else {
+                        message("Camel can't put out fire without more water");
+                    }
+                    acted = true;
+                    break;
+            }
+        }
+
+        if (!acted)
+            message("Camel just waits..."); // TODO: Random wait message
     },
 
     moveCamelTo: function moveCamelTo(nx, ny) {
