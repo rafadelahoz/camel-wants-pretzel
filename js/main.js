@@ -27,6 +27,9 @@ const cgame = {
     cols: 9,
     rows: 12,
 
+    playerTimer: null,
+    timedTimer: null,
+
     MAX_WATER: 5,
     water: 3,
 
@@ -87,20 +90,21 @@ const cgame = {
         this.renderWater();
         this.render();
 
+        clearTimeout(this.playerTimer);
+        clearTimeout(this.timedTimer);
         this.playerTurn();
         this.timedActions();
     },
 
     playerTurn: function() {
         cgame.update(true);
-        if (!cgame.gameover && !cgame.won)
-            setTimeout(cgame.playerTurn, 10);
+        cgame.playerTimer = setTimeout(cgame.playerTurn, 10);
     },
 
     timedActions: function() {
         cgame.update(false);
         if (!cgame.gameover && !cgame.won)
-            setTimeout(cgame.timedActions, 1000);
+            cgame.turnTimer = setTimeout(cgame.timedActions, 1000);
     },
 
     placeAtRandomFreePosition: function placeAtRandomFreePosition(what) {
@@ -111,13 +115,14 @@ const cgame = {
             row = Math.round(Math.random() * cgame.rows);
             if (this.isCellEmpty(col, row)) {
                 placed = true;
-                this.entities.push({
-                    type: what,
-                    x: col,
-                    y: row
-                });
+                this.addEntity({type: what, x: col, y: row});
             }
         }
+    },
+
+    addEntity(entity) {
+        entities.init(entity);
+        this.entities.push(entity);
     },
 
     isCellEmpty: function isCellEmpty(x, y) {
@@ -200,18 +205,24 @@ const cgame = {
     },
 
     update: function update(inPlayerTurn) {
-        if (!inPlayerTurn)
-            console.log("Update timed things");
-        if (!this.gameover) {
-            if (!this.won) {
-                let playerAction = false;
-                // Camel can only act in player turn
-                if (inPlayerTurn)
-                    playerAction = this.updateCamel();
-                this.updateEntities(inPlayerTurn, playerAction);
-                if (!inPlayerTurn || playerAction)
-                    this.handleInteractions(inPlayerTurn, playerAction);
-                this.updateWater();
+        
+        if (!this.gameover && !this.won) {
+            if (!inPlayerTurn)
+                console.log("Update timed things");
+
+            let playerAction = false;
+            // Camel can only act in player turn
+            if (inPlayerTurn)
+                playerAction = this.updateCamel();
+            
+            this.updateEntities(inPlayerTurn, playerAction);
+            if (!inPlayerTurn || playerAction)
+                entities.handleInteractions(inPlayerTurn, playerAction);
+            
+            this.updateWater();
+        } else {
+            if (input.button) {
+                cgame.init();
             }
         }
 
@@ -224,51 +235,16 @@ const cgame = {
     updateEntities: function updateEntities(inPlayerTurn, playerAction) {
         // Update entities
         for (entity of this.entities) {
-            this.updateEntity(entity, inPlayerTurn, playerAction);
+            entities.update(entity, inPlayerTurn, playerAction);
         }
 
         // Clear buffer
         for (entity of this.entitiesBuffer) {
-            this.entities.push(entity);
+            this.addEntity(entity);
         }
 
         this.entitiesBuffer = [];
     },
-
-    updateEntity: function updateEntity(entity, inPlayerTurn, playerAction) {
-        switch (entity.type) {
-        case "fire":
-            if (playerAction) {
-                // Spread to trees
-                for (pos of this.buildNeighbours(entity)) {
-                    if (this.getGrid(pos.x, pos.y) == charset["tree"]) {
-                        this.setGrid(pos.x, pos.y, "");
-                        this.entitiesBuffer.push({
-                            type: "fire",
-                            x: pos.x,
-                            y: pos.y
-                        });
-                    }
-                }
-            }
-            break;
-        case "automover":
-            // When not in player turns, move randomly
-            if (!inPlayerTurn) {
-                let sides = cgame.buildNeighbours(entity);
-                sides = utils.shuffle(sides);
-                for (pos of sides) {
-                    if (this.isCellEmpty(pos.x, pos.y)) {
-                        entity.x = pos.x;
-                        entity.y = pos.y;
-                        break;
-                    }
-                }
-            }
-        }
-    },
-
-
 
     setGrid: function setGrid(x, y, value) {
         if (x >= 0 && x < this.cols && y >= 0 && y < this.rows)
@@ -356,38 +332,6 @@ const cgame = {
         }
     },
 
-    handleInteractions: function handleInteractions(inPlayerTurn, playerAction) {
-        // Camel vs things
-        console.log("handling interactions");
-        for (entity of this.entities) {
-            if (entity.x == this.camel.x && entity.y == this.camel.y) {
-                console.log("Entity " + JSON.stringify(entity));
-                // Camel vs entity.type
-                switch (entity.type) {
-                case "fire":
-                    if (playerAction)
-                        cgame.removeWater(1);
-                    break;
-                case "fountain":
-                    if (playerAction)
-                        cgame.addWater(1);
-                    break;
-                case "pretzel":
-                    if (playerAction) {
-                        cgame.removeWater(1, true);
-                        if (!cgame.gameover)
-                            cgame.handleWin();
-                    }
-                    break;
-                case "automover":
-                    message("Black ball hits the camel");
-                    flashy(this.cellDesc(entity.x, entity.y), "black");
-                    break;
-                }
-            }
-        }
-    },
-
     cellDesc: function cellDesc(x, y) {
         return "td[col='" + x + "'][row='" + y + "']";
     },
@@ -395,8 +339,6 @@ const cgame = {
     addWater: function addWater(amount) {
         if (amount == undefined || amount == null)
             return;
-
-        message("Fresh!");
 
         cgame.water += amount;
         if (cgame.water > cgame.MAX_WATER) {
@@ -410,9 +352,6 @@ const cgame = {
         if (amount == undefined || amount == null)
             return;
 
-        if (!dontShowMsg)
-            message("Ouch!");
-
         cgame.water -= amount;
         flashy('#watermeter', 'red', function() {
             if (cgame.water <= 0)
@@ -424,15 +363,14 @@ const cgame = {
     },
 
     handleWin: function handleWin() {
-        /*this.render();
-        this.renderWater();*/
         this.won = true;
+
+        clearTimeout(cgame.timedTimer);
 
         setTimeout(function() {
             if (cgame.gameover)
                 setTimeout(function() {
                     message("Camel got pretzel... but got thirsty!");
-                    alert("Camel got pretzel... but got thirsty!");
                 }, 5);
             else
                 $("#title").delay(100).animate({
@@ -442,21 +380,21 @@ const cgame = {
                         "font-size": "1em"
                     }, 100, function() {
                         message("Camel got pretzel!");
-                        alert("Camel got pretzel!");
-                        cgame.init();
                     });
                 });
         }, 5);
     },
 
     handleGameover: function handleGameover() {
+
+        clearTimeout(cgame.turnTimer);
+
         setTimeout(function() {
             cgame.gameover = true;
             $('table').css('background', "gray");
 
             wait(function() {
                 message("Camel got thirsty!");
-                alert("Camel got thirsty!");
             });
         }, 5);
     },
@@ -476,20 +414,19 @@ const cgame = {
         });*/
 
         Mousetrap.bind("left", function() {
-            // cgame.moveCamel("left")
             input.left = true;
         });
         Mousetrap.bind("right", function() {
-            // cgame.moveCamel("right")
             input.right = true;
         });
         Mousetrap.bind("up", function() {
-            // cgame.moveCamel("up")
             input.up = true;
         });
         Mousetrap.bind("down", function() {
-            // cgame.moveCamel("down")
             input.down = true;
+        });
+        Mousetrap.bind("a", function() {
+            input.button = true;
         });
     }
 };
@@ -502,11 +439,11 @@ const input = {
     button: false,
 
     clear: function clear() {
-        this.left = this.right = this.up = this.down = false;
+        this.left = this.right = this.up = this.down = this.button = false;
     },
 
     any: function any() {
-        return this.left || this.right || this.up || this.down;
+        return this.left || this.right || this.up || this.down || this.button;
     }
 }
 
