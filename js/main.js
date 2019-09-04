@@ -326,10 +326,16 @@ const cgame = {
 
     moveCamelTo: function moveCamelTo(nx, ny) {
         // Check if camel can move to new position
-        if (cgame.grid[ny][nx] == '') {
+        if (cgame.canCamelMoveTo(nx, ny)) {
             cgame.camel.x = nx;
             cgame.camel.y = ny;
         }
+    },
+
+    canCamelMoveTo: function canCamelMoveTo(nx, ny) {
+        let ent = cgame.findEntityAt(nx, ny);
+        return cgame.grid[ny][nx] == '' &&
+            (!ent || ent.type != 'automover');
     },
 
     cellDesc: function cellDesc(x, y) {

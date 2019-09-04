@@ -31,9 +31,12 @@ const entities = {
                 sides = utils.shuffle(sides);
                 for (pos of sides) {
                     if (cgame.isCellEmpty(pos.x, pos.y)) {
-                        if (entity.x < pos.x)
+                        let oldx = entity.x;
+                        let oldy = entity.y;
+
+                        if (entity.x > pos.x)
                             entity.facing = "right";
-                        else if (entity.x > pos.x)
+                        else if (entity.x < pos.x)
                             entity.facing = "left";
                         else if (entity.y < pos.y)
                             entity.facing = "up";
@@ -42,6 +45,35 @@ const entities = {
                         
                         entity.x = pos.x;
                         entity.y = pos.y;
+
+                        // try to move camel
+                        if (entity.x == cgame.camel.x && entity.y == cgame.camel.y) {
+                            var nx = cgame.camel.x;
+                            var ny = cgame.camel.y;
+                            
+                            switch (entity.facing) {
+                                case "left": nx++; break;
+                                case "right": nx--; break;
+                                case "up": ny++; break;
+                                case "down": ny--; break;
+                            }
+
+                            if (cgame.getGrid(nx, ny) == '') {
+                                // Push camel if possible
+                                message("8-ball pushes Camel")
+                                cgame.camel.x = nx;
+                                cgame.camel.y = ny;
+                            } else {
+                                // Swap if not
+                                message("8-ball swaps with Camel");
+                                cgame.camel.x = oldx;
+                                cgame.camel.y = oldy;
+                            }
+
+                            // Recompute interactions (is this safe?)
+                            entities.handleInteractions(inPlayerTurn, true);
+                        }
+
                         break;
                     }
                 }
@@ -81,24 +113,6 @@ const entities = {
                 case "automover":
                     message("Black ball hits the camel");
                     flashy(cgame.cellDesc(entity.x, entity.y), "black");
-                    // try to move camel
-                    var nx = cgame.camel.x;
-                    var ny = cgame.camel.y;
-                    // TODO: maybe swapping would be cooler?
-                    switch (entity.facing) {
-                        case "left": nx++; break;
-                        case "right": nx--; break;
-                        case "up": ny++; break;
-                        case "down": ny--; break;
-                    }
-                    
-                    if (cgame.getGrid(nx, ny) == '') {
-                        cgame.camel.x = nx;
-                        cgame.camel.y = ny;
-                        // TODO: recompute interactions?
-                        entities.handleInteractions(inPlayerTurn, true);
-                    }
-
                     break;
                 }
             }
