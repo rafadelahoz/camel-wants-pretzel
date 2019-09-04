@@ -397,7 +397,8 @@ const cgame = {
 
         setTimeout(function() {
             cgame.gameover = true;
-            $('table').css('background', "gray");
+            $('#gridTable').css('background-color', "gray");
+            $('#gridTable td').css('background-color', 'transparent');
 
             wait(function() {
                 message("Camel got thirsty!");
@@ -406,18 +407,21 @@ const cgame = {
     },
 
     setupInput: function setupInput() {
-        /*$("#btnLeft").on("click", function() {
-            cgame.moveCamel("left")
+        $("#btnLeft").on("click", function() {
+            input.left = true;
         });
         $("#btnRight").on("click", function() {
-            cgame.moveCamel("right")
+            input.right = true;
         });
         $("#btnUp").on("click", function() {
-            cgame.moveCamel("up")
+            input.up = true;
         });
         $("#btnDown").on("click", function() {
-            cgame.moveCamel("down")
-        });*/
+            input.down = true;
+        });
+        $('#btnButton').on('click', function() {
+            input.button = true;
+        });
 
         Mousetrap.bind("left", function() {
             input.left = true;
