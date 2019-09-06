@@ -84,6 +84,7 @@ const cgame = {
         this.placeAtRandomFreePosition("pretzel");
         this.placeAtRandomFreePosition("fountain");
         this.placeAtRandomFreePosition("automover");
+        this.placeAtRandomFreePosition("seed");
 
         this.buildFirstGridTable();
 
@@ -349,6 +350,14 @@ const cgame = {
                     }
                     acted = true;
                     break;
+                case "seed":
+                    if (cgame.water > 1) {
+                        message("Camel waters the seed...");
+                        message("The seed starts to grow!");
+                        flashy(cgame.cellDesc(cgame.camel.x, cgame.camel.y), 'aqua');
+                        cgame.removeWater(1);
+                        entity.stage = 1;
+                    }
             }
         }
 

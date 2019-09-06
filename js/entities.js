@@ -4,6 +4,10 @@ const entities = {
         switch (ent.type) {
             case "automover":
                 ent.message = "dododo" + Math.random();
+                break;
+            case "seed":
+                ent.stage = 0;
+                break;
         }
     },
 
@@ -24,13 +28,42 @@ const entities = {
                 }
             }
             break;
+        case "seed":
+            if (playerAction) {
+                switch (entity.stage) {
+                    case 0: // nop!
+                    break;
+                    case 1:
+                        // start growing!
+                        entity.stage++;
+                        break;
+                    case 2:
+                    case 3:
+                        // grow 
+                        // unless the camel is on top
+                        // TODO: other entities?
+                        if (cgame.camel.x != entity.x || cgame.camel.y != entity.y) {
+                            entity.stage++;
+                            message("The baby plant is growing!");
+                        }
+                        break;
+                    case 4:
+                        if (cgame.camel.x != entity.x || cgame.camel.y != entity.y) {
+                           message("The baby plant has grown into a tree!");
+                           cgame.removeEntity(entity);
+                           cgame.entitiesBuffer.push({type: "tree", x: entity.x, y: entity.y});
+                        }
+                        break;
+                }
+            }
+            break;
         case "automover":
             // When not in player turns, move randomly
             if (!inPlayerTurn) {
                 let sides = cgame.buildNeighbours(entity);
                 sides = utils.shuffle(sides);
                 for (pos of sides) {
-                    if (cgame.isCellEmpty(pos.x, pos.y)) {
+                    if (entities.canEntityMoveTo(entity, pos.x, pos.y)) {
                         let oldx = entity.x;
                         let oldy = entity.y;
 
@@ -117,5 +150,17 @@ const entities = {
                 }
             }
         }
-    }
+    },
+
+    canEntityMoveTo: function canEntityMoveTo(entity, nx, ny) {
+        let ent = cgame.findEntityAt(nx, ny);
+        let emptyCell = cgame.grid[ny][nx] == '';
+
+        switch (entity.type) {
+            case "automover":
+                return emptyCell && (!ent || ent.type == 'seed' || ent.type == 'fire');
+        }
+
+        return true;
+    },
 }
