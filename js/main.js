@@ -4,6 +4,7 @@ const charsetA = {
     "tree": "🌳",
     "fire": "🔥",
     "seed": "🌰",
+    "baby-plant": "🌱",
     "pretzel": "🥨",
     "fountain": "⛲️",
     "automover": "🎱",
@@ -17,6 +18,7 @@ const charsetB = {
     "tree": "T",
     "fire": "F",
     "seed": "S",
+    "baby-plant": "SS",
     "pretzel": "P",
     "fountain": "F",
     "automover": "O",
@@ -211,7 +213,7 @@ const cgame = {
 
         // Put entities
         for (entity of this.entities) {
-            cgrid[entity.y][entity.x] = charset[entity.type];
+            cgrid[entity.y][entity.x] = entities.render(entity);
         }
 
         // Put camel
@@ -360,13 +362,14 @@ const cgame = {
                     acted = true;
                     break;
                 case "seed":
-                    if (cgame.water > 1) {
+                    if (cgame.water > 1 && ent.stage == 0) {
                         message("Camel waters the seed...");
                         message("The seed starts to grow!");
                         flashy(cgame.cellDesc(cgame.camel.x, cgame.camel.y), 'aqua');
                         cgame.removeWater(1);
-                        entity.stage = 1;
+                        ent.stage = 1;
                     }
+                    break;
                 case "key":
                     message("Camel unlocks the doors");
                     for (lock of entities.getAllOfType("lock")) {
@@ -485,19 +488,19 @@ const cgame = {
 
         Mousetrap.bind("left", function() {
             input.left = true;
-        });
+        }, 'keydown');
         Mousetrap.bind("right", function() {
             input.right = true;
-        });
+        }, 'keydown');
         Mousetrap.bind("up", function() {
             input.up = true;
-        });
+        }, 'keydown');
         Mousetrap.bind("down", function() {
             input.down = true;
-        });
+        }, 'keydown');
         Mousetrap.bind("a", function() {
             input.button = true;
-        });
+        }, 'keydown');
     }
 };
 

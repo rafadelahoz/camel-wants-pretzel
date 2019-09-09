@@ -169,4 +169,19 @@ const entities = {
             return ent && (ent.type == type);
         });
     },
+
+    render: function render(entity) {
+        switch (entity.type) {
+            case "seed":
+                if (entity.stage <= 1)
+                    return charset["seed"];
+                else if (entity.stage > 1)
+                    return charset["baby-plant"];
+                else
+                    return charset["tree"];
+                break;
+        }
+
+        return charset[entity.type];
+    }
 }
