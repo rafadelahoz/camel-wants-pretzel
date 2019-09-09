@@ -4,9 +4,12 @@ const charsetA = {
     "tree": "🌳",
     "fire": "🔥",
     "seed": "🌰",
+    "baby-plant": "🌱",
     "pretzel": "🥨",
     "fountain": "⛲️",
-    "automover": "🎱"
+    "automover": "🎱",
+    "key": "🔑",
+    "lock": "🔒",
 }
 
 const charsetB = {
@@ -15,9 +18,12 @@ const charsetB = {
     "tree": "T",
     "fire": "F",
     "seed": "S",
+    "baby-plant": "SS",
     "pretzel": "P",
     "fountain": "F",
-    "automover": "O"
+    "automover": "O",
+    "key": "K",
+    "lock": "[L]",
 }
 
 let charset = charsetA;
@@ -75,8 +81,11 @@ const cgame = {
                     cgame.grid[row].push(charset.wall);
                 else if (Math.random() > 0.2)
                     this.grid[row].push("");
-                else
-                    this.grid[row].push(charset.tree)
+                else {
+                    // this.grid[row].push(charset.tree)
+                    this.grid[row].push("");
+                    this.addEntity({type: "tree", x: col, y: row});
+                }
             }
         }
 
@@ -85,6 +94,8 @@ const cgame = {
         this.placeAtRandomFreePosition("fountain");
         this.placeAtRandomFreePosition("automover");
         this.placeAtRandomFreePosition("seed");
+        this.placeAtRandomFreePosition("key");
+        this.placeAtRandomFreePosition("lock");
 
         this.buildFirstGridTable();
 
@@ -202,7 +213,7 @@ const cgame = {
 
         // Put entities
         for (entity of this.entities) {
-            cgrid[entity.y][entity.x] = charset[entity.type];
+            cgrid[entity.y][entity.x] = entities.render(entity);
         }
 
         // Put camel
@@ -351,13 +362,23 @@ const cgame = {
                     acted = true;
                     break;
                 case "seed":
-                    if (cgame.water > 1) {
+                    if (cgame.water > 1 && ent.stage == 0) {
                         message("Camel waters the seed...");
                         message("The seed starts to grow!");
                         flashy(cgame.cellDesc(cgame.camel.x, cgame.camel.y), 'aqua');
                         cgame.removeWater(1);
-                        entity.stage = 1;
+                        ent.stage = 1;
                     }
+                    break;
+                case "key":
+                    message("Camel unlocks the doors");
+                    for (lock of entities.getAllOfType("lock")) {
+                        cgame.removeEntity(lock);
+                        flashy(this.cellDesc(lock.x, lock.y), "yellow");
+                    }
+                    cgame.removeEntity(ent);
+                    flashy(this.cellDesc(ent.x, ent.y), "yellow");
+                    break;
             }
         }
 
@@ -375,8 +396,9 @@ const cgame = {
 
     canCamelMoveTo: function canCamelMoveTo(nx, ny) {
         let ent = cgame.findEntityAt(nx, ny);
+        let blockers = ['automover', 'tree', 'lock'];
         return cgame.grid[ny][nx] == '' &&
-            (!ent || ent.type != 'automover');
+            (!ent || blockers.indexOf(ent.type) < 0);
     },
 
     cellDesc: function cellDesc(x, y) {
@@ -466,19 +488,19 @@ const cgame = {
 
         Mousetrap.bind("left", function() {
             input.left = true;
-        });
+        }, 'keydown');
         Mousetrap.bind("right", function() {
             input.right = true;
-        });
+        }, 'keydown');
         Mousetrap.bind("up", function() {
             input.up = true;
-        });
+        }, 'keydown');
         Mousetrap.bind("down", function() {
             input.down = true;
-        });
+        }, 'keydown');
         Mousetrap.bind("a", function() {
             input.button = true;
-        });
+        }, 'keydown');
     }
 };
 
