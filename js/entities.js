@@ -91,7 +91,7 @@ const entities = {
                                 case "down": ny--; break;
                             }
 
-                            if (cgame.getGrid(nx, ny) == '') {
+                            if (cgame.canCamelMoveTo(nx, ny)) {
                                 // Push camel if possible
                                 message("8-ball pushes Camel")
                                 cgame.camel.x = nx;
