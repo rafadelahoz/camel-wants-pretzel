@@ -6,7 +6,9 @@ const charsetA = {
     "seed": "🌰",
     "pretzel": "🥨",
     "fountain": "⛲️",
-    "automover": "🎱"
+    "automover": "🎱",
+    "key": "🔑",
+    "lock": "🔒",
 }
 
 const charsetB = {
@@ -17,7 +19,9 @@ const charsetB = {
     "seed": "S",
     "pretzel": "P",
     "fountain": "F",
-    "automover": "O"
+    "automover": "O",
+    "key": "K",
+    "lock": "[L]",
 }
 
 let charset = charsetA;
@@ -75,8 +79,11 @@ const cgame = {
                     cgame.grid[row].push(charset.wall);
                 else if (Math.random() > 0.2)
                     this.grid[row].push("");
-                else
-                    this.grid[row].push(charset.tree)
+                else {
+                    // this.grid[row].push(charset.tree)
+                    this.grid[row].push("");
+                    this.addEntity({type: "tree", x: col, y: row});
+                }
             }
         }
 
@@ -85,6 +92,8 @@ const cgame = {
         this.placeAtRandomFreePosition("fountain");
         this.placeAtRandomFreePosition("automover");
         this.placeAtRandomFreePosition("seed");
+        this.placeAtRandomFreePosition("key");
+        this.placeAtRandomFreePosition("lock");
 
         this.buildFirstGridTable();
 
@@ -358,6 +367,15 @@ const cgame = {
                         cgame.removeWater(1);
                         entity.stage = 1;
                     }
+                case "key":
+                    message("Camel unlocks the doors");
+                    for (lock of entities.getAllOfType("lock")) {
+                        cgame.removeEntity(lock);
+                        flashy(this.cellDesc(lock.x, lock.y), "yellow");
+                    }
+                    cgame.removeEntity(ent);
+                    flashy(this.cellDesc(ent.x, ent.y), "yellow");
+                    break;
             }
         }
 
@@ -375,8 +393,9 @@ const cgame = {
 
     canCamelMoveTo: function canCamelMoveTo(nx, ny) {
         let ent = cgame.findEntityAt(nx, ny);
+        let blockers = ['automover', 'tree', 'lock'];
         return cgame.grid[ny][nx] == '' &&
-            (!ent || ent.type != 'automover');
+            (!ent || blockers.indexOf(ent.type) < 0);
     },
 
     cellDesc: function cellDesc(x, y) {

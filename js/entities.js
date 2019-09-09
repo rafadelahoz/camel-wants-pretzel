@@ -163,4 +163,10 @@ const entities = {
 
         return true;
     },
+
+    getAllOfType: function getAllOfType(type) {
+        return cgame.entities.filter(function (ent) {
+            return ent && (ent.type == type);
+        });
+    },
 }
